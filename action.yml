@@ -57,25 +57,23 @@ runs:
       shell: bash
       id: "set-destination-path"
       run: |
-        DESTINATION_PATH=${{ inputs.gcs_bucket_name }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
-        REPORT_PUBLIC_URL=${{ inputs.gcs_bucket_public_url }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
+        DESTINATION_PATH="${{ inputs.gcs_bucket_name }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
+        REPORT_PUBLIC_URL="${{ inputs.gcs_bucket_public_url }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
 
-        echo "destination_path=$DESTINATION_PATH" >> $GITHUB_OUTPUT
+        echo "destination_path=$DESTINATION_PATH" >> $GITHUB_ENV
+        echo "report_public_url=$REPORT_PUBLIC_URL" >> $GITHUB_ENV
         echo "report_public_url=$REPORT_PUBLIC_URL" >> $GITHUB_OUTPUT
 
     - name: Report Upload | Upload report to GCS bucket
       uses: "google-github-actions/upload-cloud-storage@v2"
       with:
         path: ${{ inputs.report_folder }}
-        destination: ${{ steps.set-destination-path.outputs.DESTINATION_PATH }}
+        destination: ${{ env.destination_path }}
 
     - name: Report Upload | Generate summary
       shell: bash
       if: ${{ inputs.generate_summary == 'true' }}
-      run: |
-        echo "Test Report uploaded to ${{ env.REPORT_PUBLIC_URL }}" >> "$GITHUB_SUMMARY"
-      env:
-        REPORT_PUBLIC_URL: ${{ steps.set-destination-path.outputs.REPORT_PUBLIC_URL }}
+      run: echo "Test Report uploaded to ${{ env.report_public_url }}" >> "$GITHUB_ENV"
 
     - name: Report Upload | Generate PR check
       if: ${{ inputs.pull_request_check == 'true' }} && ${{ github.event_name == 'pull_request' }}
@@ -87,5 +85,3 @@ runs:
             value: ${{ env.REPORT_PUBLIC_URL }}
             text: |
               ${{ env.REPORT_PUBLIC_URL }}
-      env:
-        REPORT_PUBLIC_URL: ${{ steps.set-destination-path.outputs.REPORT_PUBLIC_URL }}
