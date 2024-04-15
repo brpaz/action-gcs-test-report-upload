@@ -1,0 +1,28 @@
+name: CI
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test Action
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Action
+        uses: ./
+        with:
+          gcp_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          gcp_workload_identty_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          gcs_bucket_public_url: "https://test-reports.brunopaz.xyz"
+          report_folder: "testdata/example-report"
+          gcs_bucket_name: "test-reports"
+          pull_request_check: "true"
+          generate_summary: "true"
+          github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,14 @@
+# Configuration for Dependabot
+version: 2
+
+# Define which package managers Dependabot should look for
+updates:
+  - package-ecosystem: "github-actions"
+    directory: /
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    reviewers:
+      - "brpaz"
+    open-pull-requests-limit: 3

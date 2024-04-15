@@ -1,0 +1,84 @@
+name: "GCS Test Report Upload Action"
+description: "An opinionated GitHub composite action to upload HTML test reports to a GCS bucket and website"
+author: "Bruno Paz"
+branding:
+  icon: "upload-cloud"
+  color: "blue"
+inputs:
+  gcp_project_id:
+    description: "The Google Cloud project ID"
+    required: true
+  gcp_workload_identity_provider:
+    description: "The Google Cloud Workload Identity provider"
+    required: true
+  gcs_bucket_name:
+    description: "The GCS bucket where to upload reports."
+    required: true
+  gcs_bucket_public_url:
+    description: "The public URL of the GCS bucket."
+    default: "https://storage.googleapis.com"
+  report_name:
+    description: "The name of the report file. It will be used to organize the report in the bucket."
+    required: false
+    default: ${{ github.job }}
+  report_folder:
+    description: "The folder where the report is stored."
+    required: true
+  pull_request_check:
+    description: "Whether to create a PR check with the report URL."
+    required: false
+    default: "true"
+  generate_summary:
+    description: "Whether to generate a summary with the report URL."
+    required: false
+    default: "true"
+  github-token:
+    description: "The GitHub token to create the PR check."
+    required: false
+
+outputs:
+  report_url:
+    description: "Public URL for the report"
+    value: ${{ steps.set-destination-path.outputs.REPORT_PUBLIC_URL }}
+runs:
+  using: "composite"
+  steps:
+    - name: Report Upload | Authenticate in Google Cloud
+      uses: "google-github-actions/auth@v2"
+      with:
+        project_id: ${{ inputs.gcp_project_id }}
+        workload_identity_provider: "projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider"
+
+    - name: Report Upload | Set destination path
+      shell: bash
+      id: "set-destination-path"
+      run: |
+        DESTINATION_PATH=${{ inputs.gcs_bucket_name }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
+        REPORT_PUBLIC_URL=${{ inputs.gcs_bucket_public_url }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
+
+        echo $DESTINATION_PATH >> $GITHUB_ENV
+        echo $REPORT_PUBLIC_URL >> $GITHUB_ENV
+        echo "report_public_url=$REPORT_PUBLIC_URL" >> $GITHUB_OUTPUT
+
+    - name: Report Upload | Upload report to GCS bucket
+      uses: "google-github-actions/upload-cloud-storage@v2"
+      with:
+        path: ${{ inputs.report_folder }}
+        destination: ${{ env.DESTINATION_PATH }}
+
+    - name: Report Upload | Generate summary
+      shell: bash
+      if: ${{ inputs.generate_summary == 'true' }}
+      run: |
+        echo "Test Report uploaded to ${{ env.REPORT_PUBLIC_URL }}" >> "$GITHUB_SUMMARY"
+
+    - name: Report Upload | Generate PR check
+      if: ${{ inputs.pull_request_check == 'true' }} && ${{ github.event_name == 'pull_request' }}
+      uses: patriknyblad/add-pr-checks@v1.0.0
+      with:
+        token: ${{ inputs.github-token }}
+        checks: |
+          - name: ${{ inputs.report_name }} URL
+            value: ${{ env.REPORT_PUBLIC_URL }}
+            text: |
+              ${{ env.REPORT_PUBLIC_URL }}
