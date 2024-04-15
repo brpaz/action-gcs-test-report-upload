@@ -78,7 +78,7 @@ runs:
       shell: bash
       if: ${{ inputs.generate_summary == 'true' }}
       run: |
-        echo "## ${{ inputs.report_name }} >> "$GITHUB_STEP_SUMMARY"
+        echo "## ${{ inputs.report_name }}" >> "$GITHUB_STEP_SUMMARY"
         echo "${{ env.report_public_url }}" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Report Upload | Generate PR check
