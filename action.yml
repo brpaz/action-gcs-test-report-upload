@@ -67,11 +67,6 @@ runs:
         echo "destination_path=${REPORT_GCS_FULL_PATH}" >> $GITHUB_ENV
         echo "report_public_url=${REPORT_PUBLIC_URL}" >> $GITHUB_ENV
 
-    - name: Report Upload | Modify base path in all html files
-      shell: bash
-      run: |
-        find ${{ inputs.report_folder }} -type f -name "*.html" -exec sed -i "s|href=\"|href=\"${{ env.report_public_url }}/|g" {} \;
-
     - name: Report Upload | Upload report to GCS bucket
       uses: "google-github-actions/upload-cloud-storage@v2"
       with:
