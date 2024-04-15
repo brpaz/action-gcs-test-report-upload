@@ -60,15 +60,14 @@ runs:
         DESTINATION_PATH=${{ inputs.gcs_bucket_name }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
         REPORT_PUBLIC_URL=${{ inputs.gcs_bucket_public_url }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
 
-        echo $DESTINATION_PATH >> $GITHUB_ENV
-        echo $REPORT_PUBLIC_URL >> $GITHUB_ENV
+        echo "destination_path=$DESTINATION_PATH" >> $GITHUB_OUTPUT
         echo "report_public_url=$REPORT_PUBLIC_URL" >> $GITHUB_OUTPUT
 
     - name: Report Upload | Upload report to GCS bucket
       uses: "google-github-actions/upload-cloud-storage@v2"
       with:
         path: ${{ inputs.report_folder }}
-        destination: ${{ env.DESTINATION_PATH }}
+        destination: ${{ steps.set-destination-path.outputs.DESTINATION_PATH }}
 
     - name: Report Upload | Generate summary
       shell: bash
