@@ -60,9 +60,9 @@ runs:
       id: "set-destination-path"
       run: |
         BASENAME_REPORT_FOLDER=$(basename "${{ inputs.report_folder }}")
-        REPORT_GCS_PATH=${{ github.repository }}/${{ github.run_id }}/${BASENAME_REPORT_FOLDER}
+        REPORT_GCS_PATH=${{ github.repository }}/${{ github.run_id }}
         REPORT_GCS_FULL_PATH="${{ inputs.gcs_bucket_name }}/${REPORT_GCS_PATH}"
-        REPORT_PUBLIC_URL="${{ inputs.gcs_bucket_public_url }}/${REPORT_GCS_PATH}"
+        REPORT_PUBLIC_URL="${{ inputs.gcs_bucket_public_url }}/${REPORT_GCS_PATH}/${BASENAME_REPORT_FOLDER}"
 
         echo "destination_path=${REPORT_GCS_FULL_PATH}" >> $GITHUB_ENV
         echo "report_public_url=${REPORT_PUBLIC_URL}" >> $GITHUB_ENV
