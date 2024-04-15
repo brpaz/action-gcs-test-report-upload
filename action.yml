@@ -10,7 +10,10 @@ inputs:
     required: true
   gcp_workload_identity_provider:
     description: "The Google Cloud Workload Identity provider"
-    required: true
+    required: false
+  gcp_credentials:
+    description: "The Google Cloud credentials"
+    required: false
   gcs_bucket_name:
     description: "The GCS bucket where to upload reports."
     required: true
@@ -47,7 +50,8 @@ runs:
       uses: "google-github-actions/auth@v2"
       with:
         project_id: ${{ inputs.gcp_project_id }}
-        workload_identity_provider: "projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider"
+        workload_identity_provider: "${{ inputs.gcp_workload_identity_provider }}"
+        credentials_json: "${{ inputs.gcp_credentials }}"
 
     - name: Report Upload | Set destination path
       shell: bash
