@@ -90,6 +90,7 @@ runs:
         checks: |
           - name: ${{ inputs.report_name }} Test Report
             value: ${{ env.report_public_url }}
+            summary: "Test report available at: ${{ env.report_public_url }}"
             text: |
               Report URL available at: ${{ env.report_public_url }}
 
