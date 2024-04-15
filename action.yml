@@ -74,6 +74,8 @@ runs:
       if: ${{ inputs.generate_summary == 'true' }}
       run: |
         echo "Test Report uploaded to ${{ env.REPORT_PUBLIC_URL }}" >> "$GITHUB_SUMMARY"
+      env:
+        REPORT_PUBLIC_URL: ${{ steps.set-destination-path.outputs.REPORT_PUBLIC_URL }}
 
     - name: Report Upload | Generate PR check
       if: ${{ inputs.pull_request_check == 'true' }} && ${{ github.event_name == 'pull_request' }}
@@ -85,3 +87,5 @@ runs:
             value: ${{ env.REPORT_PUBLIC_URL }}
             text: |
               ${{ env.REPORT_PUBLIC_URL }}
+      env:
+        REPORT_PUBLIC_URL: ${{ steps.set-destination-path.outputs.REPORT_PUBLIC_URL }}
