@@ -72,16 +72,17 @@ runs:
       with:
         path: ${{ inputs.report_folder }}
         destination: ${{ env.destination_path }}
+        process_gcloudignore: "false"
 
     - name: Report Upload | Generate summary
       shell: bash
       if: ${{ inputs.generate_summary == 'true' }}
       run: |
-        echo "## ${{ inputs.report_name }} Test Report uploaded to ${{ env.report_public_url }}" >> "$GITHUB_STEP_SUMMARY"
+        echo "## ${{ inputs.report_name }}\n\n ${{ env.report_public_url }}" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Report Upload | Generate PR check
       if: ${{ inputs.pull_request_check == 'true' }} && ${{ github.event_name == 'pull_request' }}
-      uses: patriknyblad/add-pr-checks@v1.0.0
+      uses: patriknyblad/add-pr-checks@v1.1.0
       with:
         token: ${{ inputs.github-token }}
         checks: |
