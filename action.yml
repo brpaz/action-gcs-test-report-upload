@@ -87,11 +87,9 @@ runs:
       with:
         token: ${{ inputs.github-token }}
         checks: |
-          - name: ${{ inputs.report_name }} Test Report
+          - name: ${{ inputs.report_name }}
             value: ${{ env.report_public_url }}
             summary: "Test report available at: ${{ env.report_public_url }}"
-            text: |
-              Report URL available at: ${{ env.report_public_url }}
 
     - name: Report Upload | Output report URL
       shell: bash
