@@ -16,14 +16,16 @@ inputs:
     required: false
   gcs_bucket_name:
     description: "The GCS bucket where to upload reports."
-    required: true
+    required: false
+    default: "test-reports.brunopaz.xyz"
   gcs_bucket_public_url:
     description: "The public URL of the GCS bucket."
-    default: "https://storage.googleapis.com"
-  report_name:
-    description: "The name of the report file. It will be used to organize the report in the bucket."
     required: false
-    default: ${{ github.job }}
+    default: "https://test-reports.brunopaz.xyz"
+  report_name:
+    description: "A identifiable name for the report. Will be used in the action outputs."
+    required: false
+    default: "Test results"
   report_folder:
     description: "The folder where the report is stored."
     required: true
@@ -42,7 +44,7 @@ inputs:
 outputs:
   report_url:
     description: "Public URL for the report"
-    value: ${{ steps.set-destination-path.outputs.REPORT_PUBLIC_URL }}
+    value: ${{ steps.output-report-url.outputs.url }}
 runs:
   using: "composite"
   steps:
@@ -57,24 +59,25 @@ runs:
       shell: bash
       id: "set-destination-path"
       run: |
-        DESTINATION_PATH="${{ inputs.gcs_bucket_name }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
-        REPORT_PUBLIC_URL="${{ inputs.gcs_bucket_public_url }}/${{ github.repository }}/${{ github.run_id }}/${{ inputs.report_name }}"
+        BASENAME_REPORT_FOLDER=$(basename "${{ inputs.report_folder }}")
+        REPORT_GCS_PATH=${{ github.repository }}/${{ github.run_id }}/${BASENAME_REPORT_FOLDER}
+        REPORT_GCS_FULL_PATH="${{ inputs.gcs_bucket_name }}/${REPORT_GCS_PATH}"
+        REPORT_PUBLIC_URL="${{ inputs.gcs_bucket_public_url }}/${REPORT_GCS_PATH}"
 
-        echo "destination_path=$DESTINATION_PATH" >> $GITHUB_ENV
-        echo "report_public_url=$REPORT_PUBLIC_URL" >> $GITHUB_ENV
-        echo "report_public_url=$REPORT_PUBLIC_URL" >> $GITHUB_OUTPUT
+        echo "destination_path=${REPORT_GCS_FULL_PATH}" >> $GITHUB_ENV
+        echo "report_public_url=${REPORT_PUBLIC_URL}" >> $GITHUB_ENV
 
     - name: Report Upload | Upload report to GCS bucket
       uses: "google-github-actions/upload-cloud-storage@v2"
       with:
         path: ${{ inputs.report_folder }}
-        glob: "**/*"
         destination: ${{ env.destination_path }}
 
     - name: Report Upload | Generate summary
       shell: bash
       if: ${{ inputs.generate_summary == 'true' }}
-      run: echo "Test Report uploaded to ${{ env.report_public_url }}" >> "$GITHUB_ENV"
+      run: |
+        echo "## ${{ inputs.report_name }} Test Report uploaded to ${{ env.report_public_url }}" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Report Upload | Generate PR check
       if: ${{ inputs.pull_request_check == 'true' }} && ${{ github.event_name == 'pull_request' }}
@@ -82,7 +85,13 @@ runs:
       with:
         token: ${{ inputs.github-token }}
         checks: |
-          - name: ${{ inputs.report_name }} URL
+          - name: ${{ inputs.report_name }} Test Report
             value: ${{ env.report_public_url }}
             text: |
-              ${{ env.report_public_url }}
+              Report URL available at: ${{ env.report_public_url }}
+
+    - name: Report Upload | Output report URL
+      shell: bash
+      id: "output-report-url"
+      run: |
+        echo "url=$REPORT_PUBLIC_URL" >> $GITHUB_OUTPUT
